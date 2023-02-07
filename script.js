@@ -11,24 +11,41 @@ let imageData;
 let isRefreshNeeded = true; // TODO: only refresh if 6h old
 
 chrome.storage.local.get('imgData').then((result) => {
-  imageData = result.imgData;
+  if (!result) {
+    image.src = imageURL;
+    return;
+  } else {
+    image.src = 'data:image/png;base64,' + result.imgData;
+    chrome.storage.local.remove('imgData');
+  }
+
+  image.onload = function () {
+    document.body.style.backgroundImage = "url('" + image.src + "')";
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundPosition = 'center';
+    var content = document.getElementById('content');
+    content.className = 'show';
+
+    // Save a new background image to local storage
+    if (isRefreshNeeded) {
+      const newImage = new Image();
+      newImage.crossOrigin = 'anonymous';
+      newImage.src = imageURL;
+      newImage.onload = function () {
+        const canvas = document.createElement('canvas');
+        canvas.width = imageWidth;
+        canvas.height = imageHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(newImage, 0, 0);
+        var dataURL = canvas.toDataURL('image/png');
+        chrome.storage.local.set({
+          imgData: dataURL.replace(/^data:image\/(png|jpg);base64,/, ''),
+        });
+      };
+    }
+  };
 });
-
-if (!imageData) {
-  image.src = imageURL;
-} else {
-  image.src = 'data:image/png;base64,' + imageData;
-  chrome.storage.local.remove('imgData');
-}
-
-image.onload = function () {
-  document.body.style.backgroundImage = "url('" + image.src + "')";
-  document.body.style.backgroundSize = 'cover';
-  document.body.style.backgroundRepeat = 'no-repeat';
-  document.body.style.backgroundPosition = 'center';
-  var content = document.getElementById('content');
-  content.className = 'show';
-};
 
 // Init clock
 function refreshClock() {
@@ -65,22 +82,4 @@ if (chrome) {
       list.appendChild(li);
     }
   });
-}
-
-// Save a new background image to local storage
-if (isRefreshNeeded) {
-  const newImage = new Image();
-  newImage.crossOrigin = 'anonymous';
-  newImage.src = imageURL;
-  newImage.onload = function () {
-    const canvas = document.createElement('canvas');
-    canvas.width = imageWidth;
-    canvas.height = imageHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(newImage, 0, 0);
-    var dataURL = canvas.toDataURL('image/png');
-    chrome.storage.local.set({
-      imgData: dataURL.replace(/^data:image\/(png|jpg);base64,/, ''),
-    });
-  };
 }

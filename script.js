@@ -29,6 +29,7 @@ if (chrome) {
         node.url +
         "&sz=16' height='16' width='16' style='margin-right:10px; overflow: hidden; text-wrap:nowrap'>" +
         node.title;
+
       li.appendChild(a);
       list.appendChild(li);
     }

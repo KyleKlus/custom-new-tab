@@ -1,0 +1,5 @@
+.vscode/* merge=dev
+.vscode/settings.json merge=dev
+.vscode/tasks.json merge=dev
+.vscode/launch.json merge=dev
+.vscode/extensions.json merge=dev

@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Custom New Tab Extension",
     "version": "1.0",
-    "permissions": ["bookmarks"],
+    "permissions": ["bookmarks", "storage", "unlimitedStorage"],
     "chrome_url_overrides": {
       "newtab": "newtab.html"
     }

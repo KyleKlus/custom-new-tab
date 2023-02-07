@@ -7,13 +7,18 @@ const imageHeight = 1080;
 const imageURL =
   'https://source.unsplash.com/' + imageWidth + 'x' + imageHeight + '/?nature';
 const image = new Image();
+let imageData;
+let isRefreshNeeded = true; // TODO: only refresh if 6h old
 
-const imageData = localStorage.getItem('imgData');
+chrome.storage.local.get('imgData').then((result) => {
+  imageData = result.imgData;
+});
+
 if (!imageData) {
   image.src = imageURL;
 } else {
   image.src = 'data:image/png;base64,' + imageData;
-  localStorage.removeItem('imgData');
+  chrome.storage.local.remove('imgData');
 }
 
 image.onload = function () {
@@ -63,18 +68,19 @@ if (chrome) {
 }
 
 // Save a new background image to local storage
-const newImage = new Image();
-newImage.crossOrigin = 'anonymous';
-newImage.src = imageURL;
-newImage.onload = function () {
-  const canvas = document.createElement('canvas');
-  canvas.width = imageWidth;
-  canvas.height = imageHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(newImage, 0, 0);
-  var dataURL = canvas.toDataURL('image/png');
-  localStorage.setItem(
-    'imgData',
-    dataURL.replace(/^data:image\/(png|jpg);base64,/, '')
-  );
-};
+if (isRefreshNeeded) {
+  const newImage = new Image();
+  newImage.crossOrigin = 'anonymous';
+  newImage.src = imageURL;
+  newImage.onload = function () {
+    const canvas = document.createElement('canvas');
+    canvas.width = imageWidth;
+    canvas.height = imageHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(newImage, 0, 0);
+    var dataURL = canvas.toDataURL('image/png');
+    chrome.storage.local.set({
+      imgData: dataURL.replace(/^data:image\/(png|jpg);base64,/, ''),
+    });
+  };
+}
